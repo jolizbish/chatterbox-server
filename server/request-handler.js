@@ -13,10 +13,11 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 // Jordan, this fixes the issue. Our .on() functions reset the variables or something...
 // so the solution is to put the variables 
-var resultsObj = {results: [{username: 'jere', text: 'hihi', roomname: 'lobby', objectId: 999}]};
+var resultsObj = {results: [/*{username: 'jere', text: 'hihi', roomname: 'lobby', objectId: 999} */]};
 var value;
 var body = '';
 var requestHandler;
+var optionsObj = {GET: 'You can send get requests to get the list of messages', POST: 'Send messages to the server', OPTIONS: 'You are already using OPTIONS so you know how this works'};
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -36,6 +37,7 @@ var dataTranslator = function(body) {
   body = body.replaceAll('+', ' ');
   body = body.replaceAll('%2B', '+');
   return '{"' + body + '"}';
+  // return body;
 };
 
 var idMaker = function(obj) {
@@ -86,8 +88,7 @@ module.exports = requestHandler = function(request, response) {
 
     statusCode = 200;
     response.writeHead(statusCode, headers);
-    response.end();
-
+    response.end(JSON.stringify(optionsObj));
   } else if (request.method === 'POST') {
 
     statusCode = 201;
@@ -95,8 +96,9 @@ module.exports = requestHandler = function(request, response) {
 
     request.on('data', function(data) {
       body += data.toString();
-      body = dataTranslator(body);
-      console.log('I just posted', body, 'is value', data, 'is data');
+      if (body.includes('text')) {
+        body = dataTranslator(body);
+      }
     });
 
     request.on('end', function() {
@@ -107,8 +109,6 @@ module.exports = requestHandler = function(request, response) {
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify(resultsObj));
     });
-
-    console.log('I just posted', value, 'is value');
 
 
   } else {

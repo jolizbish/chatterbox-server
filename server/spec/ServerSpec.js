@@ -118,4 +118,37 @@ describe('Node Server Request Listener Function', function() {
       });
   });
 
+  it('Should answer OPTIONS requests ', function() {
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    // Wait for response to return and then check status code
+    waitForThen(
+      function() { return res._ended; },
+      function() {
+        expect(res._responseCode).to.equal(200);
+      });
+  });
+
+  it('Should respond with list of options', function() {
+
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    var messages = JSON.parse(res._data);
+    console.log(messages);
+
+    // console.log('res._data: ', res._data);
+    // Wait for response to return and then check status code
+    waitForThen(
+      function() { return res._ended; },
+      function() {
+        expect(res._data).to.equal({GET: 'You can send get requests to get the list of messages', POST: 'Send messages to the server', OPTIONS: 'You are already using OPTIONS so you know how this works'});
+      });
+  });
+
 });
