@@ -13,7 +13,7 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 // Jordan, this fixes the issue. Our .on() functions reset the variables or something...
 // so the solution is to put the variables 
-var resultsObj = {results: []};
+var resultsObj = {results: [{username: 'jere', text: 'hihi', roomname: 'lobby', objectId: 999}]};
 var value;
 var body = '';
 var requestHandler;
@@ -25,6 +25,24 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+String.prototype.replaceAll = function(search, replacement) {
+  var target = this;
+  return target.split(search).join(replacement);
+};
+
+var dataTranslator = function(body) {
+  body = body.replaceAll('&', '","');
+  body = body.replaceAll('=', '":"');
+  body = body.replaceAll('+', ' ');
+  body = body.replaceAll('%2B', '+');
+  return '{"' + body + '"}';
+};
+
+var idMaker = function(obj) {
+  var date = new Date();
+  var id = date.valueOf();
+  obj.objectId = id;
+};
 
 module.exports = requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -65,17 +83,11 @@ module.exports = requestHandler = function(request, response) {
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify(resultsObj));
   } else if (request.method === 'OPTIONS') {
-    console.log("GRRRR");
+
     statusCode = 200;
     response.writeHead(statusCode, headers);
     response.end();
 
-    // request.on('end', function() {
-    //   value = JSON.parse(body);
-    //   resultsObj.results.push(value);
-    //   console.log(value);
-    //   // response.end(JSON.stringify(resultsObj));
-    // });
   } else if (request.method === 'POST') {
 
     statusCode = 201;
@@ -83,14 +95,21 @@ module.exports = requestHandler = function(request, response) {
 
     request.on('data', function(data) {
       body += data.toString();
+      body = dataTranslator(body);
+      console.log('I just posted', body, 'is value', data, 'is data');
     });
 
     request.on('end', function() {
       value = JSON.parse(body);
+      console.log('I just posted', value, 'is value');
+      idMaker(value);
       resultsObj.results.push(value);
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify(resultsObj));
     });
+
+    console.log('I just posted', value, 'is value');
+
 
   } else {
     statusCode = 500;
